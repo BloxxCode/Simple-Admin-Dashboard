@@ -38,7 +38,7 @@ export async function GET() {
     // Enviar las transacciones como respuesta
     return NextResponse.json(transacciones);
   } catch (error) {
-    console.error('Error en GET:', error.message);
-    return NextResponse.json({ error: 'Error al obtener las transacciones', detalles: error.message }, { status: 500 });
+    console.error('Error en GET:', error);
+    return NextResponse.json({ error: 'Error al obtener las transacciones' }, { status: 500 });
   }
 }
