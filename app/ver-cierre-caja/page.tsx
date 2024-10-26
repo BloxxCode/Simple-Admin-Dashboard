@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfToday, endOfToday } from 'date-fns';
 import { CreditCard } from 'lucide-react';
 
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -52,7 +52,7 @@ export default function CierreDeCajaPage() {
     useEffect(() => {
       // Fetch data for the default period
       fetchCierreCaja(dateRange);
-    }, []);
+    }, [dateRange]);
 
     return (
       <div className="flex flex-col min-h-screen">
