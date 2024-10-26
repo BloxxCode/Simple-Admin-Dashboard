@@ -11,7 +11,6 @@ import { DateTime } from "luxon"
 
 interface TransactionFormProps {
   onTransactionAdded: () => void
-  setTotalExpense: (total: number) => void; // Agrega la prop para manejar el total de gastos
 }
 
 export function TransactionForm({ onTransactionAdded }: TransactionFormProps) {
