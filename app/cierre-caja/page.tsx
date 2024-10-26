@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatInTimeZone } from 'date-fns-tz';
+import { DateTime } from "luxon";
 
 export default function CierreDeCaja() {
   const limaTimeZone = 'America/Lima';
@@ -24,7 +25,7 @@ export default function CierreDeCaja() {
   };
 
   const [fechaRegistro, setFechaRegistro] = useState<string>(getCurrentDateTimeInLima());
-  const [fecha, setFecha] = useState<string>(getCurrentDateInLima());
+  const [fecha] = useState<string>(getCurrentDateInLima());
   const [efectivo, setEfectivo] = useState<string>('');
   const [visa, setVisa] = useState<string>('');
   const [yape, setYape] = useState<string>('');
@@ -60,11 +61,15 @@ export default function CierreDeCaja() {
     }
   };
 
+  const obtenerFechaLima = () => {
+    return DateTime.now().setZone('America/Lima').toUTC().toISO();
+  };
+
   const handleGuardar = async () => {
     setShowDialog(false);
 
     const utcDate = new Date(fecha).toISOString()
-    const fechaRegistroUtc = new Date(fechaRegistro).toISOString();
+    const fechaRegistroUtc = obtenerFechaLima()
 
     const data = {
       fecha: utcDate, // Enviar la fecha en formato ISO 8601
@@ -90,6 +95,7 @@ export default function CierreDeCaja() {
         alert(`Error: ${result.error}`);
       }
     } catch (error) {
+      console.log(error)
       alert('Error al intentar guardar el registro');
     }
   };

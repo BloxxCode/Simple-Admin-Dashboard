@@ -16,20 +16,23 @@ export async function GET(req: Request) {
     // Convertir las fechas proporcionadas en Luxon DateTime o usar la fecha actual en Lima
     const ahoraEnLima = DateTime.now().setZone('America/Lima');
 
+    console.log("Ahora en Lima:", ahoraEnLima)
+
     let inicioDelDia, finDelDia;
     let xproveedor;
 
     if (startDateParam && endDateParam) {
       // Si se proporcionan fechas, las usamos
-      inicioDelDia = DateTime.fromISO(startDateParam, { zone: 'America/Lima' }).startOf('day').toISO();
-      finDelDia = DateTime.fromISO(endDateParam, { zone: 'America/Lima' }).endOf('day').toISO();
+      inicioDelDia = DateTime.fromISO(startDateParam, { zone: 'America/Lima' }).startOf('day').toUTC().toISO();
+      finDelDia = DateTime.fromISO(endDateParam, { zone: 'America/Lima' }).endOf('day').toUTC().toISO();
     } else {
       // Si no se proporcionan, usamos el día actual
-      inicioDelDia = ahoraEnLima.startOf('day').toISO(); // YYYY-MM-DDT00:00:00-05:00
-      finDelDia = ahoraEnLima.endOf('day').toISO();     // YYYY-MM-DDT23:59:59-05:00
+      inicioDelDia = ahoraEnLima.startOf('day').toUTC().toISO(); // YYYY-MM-DDT00:00:00-05:00
+      finDelDia = ahoraEnLima.endOf('day').toUTC().toISO();     // YYYY-MM-DDT23:59:59-05:00
     }
 
-    console.log(inicioDelDia, finDelDia)
+    console.log("Inicio del dia: ", inicioDelDia)
+    console.log("Fin del dia: ", finDelDia)
 
     if (!inicioDelDia || !finDelDia) {
       throw new Error('Error al convertir las fechas a ISO');

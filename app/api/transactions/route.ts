@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
-import { Transaccion } from '@/types'
 
 // Función para manejar la solicitud POST para guardar una transacción
 export async function POST(req: Request) {

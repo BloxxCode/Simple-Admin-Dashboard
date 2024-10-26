@@ -10,28 +10,27 @@ import { DateRangePicker } from '@/components/date-range-picker';
 
 const limaTimeZone = 'America/Lima';
 
+
 export default function CierreDeCajaPage() {
     const [dateRange, setDateRange] = useState({
       from: startOfToday(),
       to: endOfToday(),
     });
     const [totalCierre, setTotalCierre] = useState<number>(0);
-    const [numCierres, setNumCierres] = useState<number>(0);
     const [totalEfectivo, setTotalEfectivo] = useState<number>(0);
     const [totalVisa, setTotalVisa] = useState<number>(0);
     const [totalYape, setTotalYape] = useState<number>(0);
   
     const fetchCierreCaja = async (range: { from: Date; to: Date }) => {
       // Convertir las fechas a ISO 8601 en formato UTC
-      const startDay = format(range.from, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-      const endDay = format(range.to, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+      const startDay = format(range.from, "yyyy-MM-dd");
+      const endDay = format(range.to, "yyyy-MM-dd");
 
       try {
         const response = await fetch(`/api/ver-cierre-caja?startDay=${startDay}&endDay=${endDay}`);
         const data = await response.json();
 
         setTotalCierre(data.total);
-        setNumCierres(data.count);
         setTotalEfectivo(data.totalEfectivo);
         setTotalVisa(data.totalVisa);
         setTotalYape(data.totalYape);

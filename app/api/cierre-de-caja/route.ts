@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     // 4. Guardar los datos en la base de datos
     await collection.insertOne({
       fecha: new Date(fecha),
-      fechaRegistro: new Date(fechaRegistro),
+      fechaRegistro: fechaRegistro,
       efectivo,
       visa,
       yape,
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     // 5. Enviar respuesta exitosa
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.log(error)
     return NextResponse.json({ error: 'Error al procesar la solicitud' }, { status: 500 });
   }
 }

@@ -11,8 +11,11 @@ export interface Producto {
   export interface Transaccion {
     _id: string
     nombre: string
-    proveedor: string
-    costoTotal: number
+    categoria: string
+    medida: string
+    precio: number
     cantidad: number
-    fechaRegistro: string
+    costoTotal: number
+    proveedor: string
+    fechaRegistro: Date
   }

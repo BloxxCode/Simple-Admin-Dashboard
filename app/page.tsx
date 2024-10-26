@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+// import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { DateRange } from "react-day-picker"
 import { format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -27,10 +27,10 @@ import {
 } from "@/components/ui/tabs"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { MainNav } from "@/components/main-nav"
-import { Overview } from "@/components/overview"
 import { RecentSales } from "@/components/recent-sales"
 import { UserNav } from "@/components/user-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { PaginatedTransactionTable } from "@/components/PaginatedTransactionTable"
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [numTransactions, setNumTransactions] = useState<number>(0)
   const [showTransactionForm, setShowTransactionForm] = useState(false)
 
-  const router = useRouter()
+  // const router = useRouter()
 
   const fetchTransactions = async (range: DateRange | undefined, proveedor: string) => {
     if (range?.from && range?.to) {
@@ -87,6 +87,7 @@ export default function DashboardPage() {
     } else if (period === "thisMonth") {
       newDateRange = { from: startOfMonth(new Date()), to: endOfMonth(new Date()) }
     }
+    console.log(selectedPeriod)
 
     setDateRange(newDateRange)
     fetchTransactions(newDateRange, selectedTab)
@@ -223,10 +224,11 @@ export default function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
               <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>Grafica Anual {selectedTab}</CardTitle>
+                  <CardTitle>Lista de Transacciones del {selectedTab}</CardTitle>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <Overview selectedTab={selectedTab} />
+                  {/* <Overview selectedTab={selectedTab} /> */}
+                  <PaginatedTransactionTable transactions={transactionsData} />
                 </CardContent>
               </Card>
               <Card className="col-span-3">

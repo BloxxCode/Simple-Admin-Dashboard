@@ -10,7 +10,6 @@ export async function POST(req: Request) {
 
     const client = await connectToDatabase();
     const db = client.db("inventario_restaurante");
-    const collection = db.collection("productos");
 
     // Consulta a la base de datos
     const producto = await db.collection('productos').findOne({ _id: new ObjectId(productoId) })

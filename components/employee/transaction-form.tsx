@@ -43,7 +43,8 @@ export function TransactionForm({ onTransactionAdded }: TransactionFormProps) {
 
   const obtenerFechaLima = () => {
     const fecha = DateTime.now().setZone('America/Lima').toISO();
-    return fecha
+    const dateFecha = new Date(fecha).toISOString()
+    return dateFecha
   };
 
   const handleSeleccionProducto = (producto: Producto) => {

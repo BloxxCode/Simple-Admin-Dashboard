@@ -1,47 +1,48 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb'; 
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
-import { startOfDay, endOfDay, addHours } from 'date-fns';
+import { DateTime } from "luxon";
 
 const limaTimeZone = 'America/Lima';
 
 export async function GET(req: Request) {
-    const client = await connectToDatabase();
-    const db = client.db("inventario_restaurante");
-    const collection = db.collection("cierres-de-caja");
-    
     try {
-        // Obtener la fecha actual en Lima
-        const date = new Date()
-        const nowInLima = formatInTimeZone(date, limaTimeZone, 'yyyy-MM-dd HH:mm:ssXXX');
-
+        const client = await connectToDatabase();
+        const db = client.db("inventario_restaurante");
+        const collection = db.collection("cierres-de-caja");
         const { searchParams } = new URL(req.url);
-        // Convertir los parámetros a objetos Date en UTC
-        const startDateParam = new Date(searchParams.get('startDay')); // Recibido en UTC
-        const endDateParam = new Date(searchParams.get('endDay')); // Recibido en UTC
+        const startDateParam = searchParams.get('startDay');
+        const endDateParam = searchParams.get('endDay');
+    
+        // Convertir las fechas proporcionadas en Luxon DateTime o usar la fecha actual en Lima
+        const ahoraEnLima = DateTime.now().setZone('America/Lima');
+    
+        console.log("Ahora en Lima:", ahoraEnLima)
 
-        // Sumar 5 horas (5 meridianos)
-        const startDayUTC = new Date(startDateParam.getTime() + 5 * 60 * 60 * 1000);
-        const endDayUTC = new Date(endDateParam.getTime() + 5 * 60 * 60 * 1000);
-
-        // Formato final
-        console.log("Inicio calculado: ", startDayUTC.toISOString());
-        console.log("Fin calculado: ", endDayUTC.toISOString());
-
-        console.log("Hora de lima:", nowInLima)
-        // Calcular el inicio y fin del día en Lima
-        const startDayLima = startOfDay(nowInLima); // 00:00:00
-        const endDayLima = endOfDay(nowInLima); // 23:59:59
-
-        console.log("Inicio lima: ", startDayLima)
-        console.log("Fin lima: ", endDayLima)
+        let inicioDelDia, finDelDia;
+    
+        if (startDateParam && endDateParam) {
+          // Si se proporcionan fechas, las usamos
+            inicioDelDia = DateTime.fromISO(startDateParam, { zone: 'America/Lima' }).startOf('day').toISO();
+            finDelDia = DateTime.fromISO(endDateParam, { zone: 'America/Lima' }).endOf('day').toISO();
+        } else {
+          // Si no se proporcionan, usamos el día actual
+            inicioDelDia = ahoraEnLima.startOf('day').toISO(); // YYYY-MM-DDT00:00:00-05:00
+            finDelDia = ahoraEnLima.endOf('day').toISO();     // YYYY-MM-DDT23:59:59-05:00
+        }
+    
+        console.log("Inicio del dia: ", inicioDelDia)
+        console.log("Fin del dia: ", finDelDia)
+    
+        if (!inicioDelDia || !finDelDia) {
+            throw new Error('Error al convertir las fechas a ISO');
+        }
 
 
         // Consultar los registros en la base de datos
         const cierres = await collection.find({
             fechaRegistro: {
-                $gte: new Date(startDayUTC),
-                $lte: new Date(endDayUTC),
+                $gte: inicioDelDia,
+                $lte: finDelDia,
             },
         }).toArray();
 
