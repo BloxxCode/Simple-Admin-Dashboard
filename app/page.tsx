@@ -56,7 +56,7 @@ export default function DashboardPage() {
         const data = await response.json()
 
         setTransactionsData(data)
-        const totalCost = data.reduce((acc: number, transaction: Transaccion) => acc + transaction.costoTotal, 0)
+        const totalCost = data.reduce((acc: number, transaction: any) => acc + transaction.costoTotal, 0)
         setTotalCost(totalCost)
         setNumTransactions(data.length)
       } catch (error) {
