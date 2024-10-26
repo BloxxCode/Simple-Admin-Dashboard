@@ -14,7 +14,7 @@ export async function GET() {
     // Enviar las transacciones como respuesta
     return NextResponse.json(productos);
   } catch (error) {
-    console.log('Error en GET:', error.message);
-    return NextResponse.json({ error: 'Error al obtener las transacciones', detalles: error.message }, { status: 500 });
+    console.log('Error en GET:', error);
+    return NextResponse.json({ error: 'Error al obtener las transacciones' }, { status: 500 });
   }
 }
