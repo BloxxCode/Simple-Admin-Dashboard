@@ -8,8 +8,6 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/date-range-picker';
 
-const limaTimeZone = 'America/Lima';
-
 
 export default function CierreDeCajaPage() {
     const [dateRange, setDateRange] = useState({

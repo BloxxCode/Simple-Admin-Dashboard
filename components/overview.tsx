@@ -8,6 +8,7 @@ interface OverviewProps {
 
 export function Overview({ selectedTab }: OverviewProps) {
   // This data should be fetched from an API based on the selectedTab
+  console.log(selectedTab)
   const data = [
     {
       name: "Jan",

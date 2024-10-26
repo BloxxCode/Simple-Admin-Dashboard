@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb'; 
 import { DateTime } from "luxon";
 
-const limaTimeZone = 'America/Lima';
-
 export async function GET(req: Request) {
     try {
         const client = await connectToDatabase();

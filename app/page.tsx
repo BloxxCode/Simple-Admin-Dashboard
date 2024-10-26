@@ -4,12 +4,11 @@ import { useState, useEffect } from "react"
 // import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { DateRange } from "react-day-picker"
-import { format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfToday, endOfToday } from "date-fns";
 
 import { PackagePlus, CreditCard, Users } from "lucide-react";
 import { TransactionForm } from "@/components/employee/transaction-form";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-
 
 import { Button } from "@/components/ui/button"
 import {
@@ -31,6 +30,7 @@ import { RecentSales } from "@/components/recent-sales"
 import { UserNav } from "@/components/user-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { PaginatedTransactionTable } from "@/components/PaginatedTransactionTable"
+import { Transaccion } from "@/types";
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   })
   const [selectedTab, setSelectedTab] = useState("total")
   const [selectedPeriod, setSelectedPeriod] = useState("today")
-  const [transactionsData, setTransactionsData] = useState<any[]>([])
+  const [transactionsData, setTransactionsData] = useState<Transaccion[]>([])
   const [totalCost, setTotalCost] = useState<number>(0)
   const [numTransactions, setNumTransactions] = useState<number>(0)
   const [showTransactionForm, setShowTransactionForm] = useState(false)
@@ -56,7 +56,7 @@ export default function DashboardPage() {
         const data = await response.json()
 
         setTransactionsData(data)
-        const totalCost = data.reduce((acc: number, transaction: any) => acc + transaction.costoTotal, 0)
+        const totalCost = data.reduce((acc: number, transaction: Transaccion) => acc + transaction.costoTotal, 0)
         setTotalCost(totalCost)
         setNumTransactions(data.length)
       } catch (error) {
@@ -76,27 +76,12 @@ export default function DashboardPage() {
     fetchTransactions(dateRange, tab)
   }
 
-  const handlePeriodChange = (period: string) => {
-    setSelectedPeriod(period)
-
-    let newDateRange: DateRange | undefined
-    if (period === "today") {
-      newDateRange = { from: startOfToday(), to: endOfToday() }
-    } else if (period === "thisWeek") {
-      newDateRange = { from: startOfWeek(new Date()), to: endOfWeek(new Date()) }
-    } else if (period === "thisMonth") {
-      newDateRange = { from: startOfMonth(new Date()), to: endOfMonth(new Date()) }
-    }
-    console.log(selectedPeriod)
-
-    setDateRange(newDateRange)
-    fetchTransactions(newDateRange, selectedTab)
-  }
+  console.log(selectedPeriod)
 
   useEffect(() => {
     // Fetch initial data when the page loads with "Today" and "Total" tab
     fetchTransactions(dateRange, selectedTab)
-  }, [])
+  }, [dateRange, selectedTab])
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -4,7 +4,7 @@ import * as React from "react";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { addDays, format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { fromZonedTime, toZonedTime } from 'date-fns-tz'; // Importar funciones adecuadas
+import { fromZonedTime } from 'date-fns-tz'; // Importar funciones adecuadas
 const limaTimeZone = 'America/Lima';
 
 import { cn } from "@/lib/utils";
@@ -31,7 +31,6 @@ export type DateRangePickerProps = React.HTMLAttributes<HTMLDivElement> & {
 export function DateRangePicker({
   className,
   onDateRangeChange,
-  onPeriodChange,
 }: DateRangePickerProps) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),

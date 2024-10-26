@@ -25,11 +25,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MainNav } from "@/components/main-nav"
 import { UserNav } from "@/components/user-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Product {
   _id: string
@@ -62,7 +61,7 @@ export default function ProductosPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
 
-  const router = useRouter()
+  // const router = useRouter()
 
   useEffect(() => {
     // Fetch products from API
@@ -453,7 +452,7 @@ export default function ProductosPage() {
           <DialogHeader>
             <DialogTitle>Eliminar Producto</DialogTitle>
           </DialogHeader>
-          <p>¿Estás seguro de que quieres eliminar el producto "{currentProduct?.nombre}"? Esta acción no se puede deshacer.</p>
+          <p>¿Estás seguro de que quieres eliminar el producto &quot;{currentProduct?.nombre}&quot;? Esta acción no se puede deshacer.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteProductDialog(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDeleteProduct}>Eliminar</Button>
