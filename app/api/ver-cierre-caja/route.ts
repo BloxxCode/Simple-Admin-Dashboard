@@ -53,7 +53,7 @@ export async function GET(req: Request) {
         const totalVisa = cierres.reduce((acc, cierre) => acc + (cierre.visa || 0), 0);
         const totalYape = cierres.reduce((acc, cierre) => acc + (cierre.yape || 0), 0);
 
-        return NextResponse.json({ total, count, totalEfectivo, totalVisa, totalYape });
+        return NextResponse.json({ total, count, totalEfectivo, totalVisa, totalYape, cierres });
     } catch (error) {
         console.error('Error al obtener los cierres de caja:', error);
         return NextResponse.json({ error: 'Error al obtener los datos' }, { status: 500 });

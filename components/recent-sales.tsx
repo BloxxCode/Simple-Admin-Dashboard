@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRecentTransactions } from "@/lib/api"; // Asegúrate de tener esta función en tu API
+import { Transaccion } from "@/types";
 
 export function RecentSales() {
-  const [recentSales, setRecentSales] = useState([]);
+  const [recentSales, setRecentSales] = useState<Pick<Transaccion, "nombre" | "cantidad" | "precio" | "costoTotal">[]>([]);
 
   // Función para obtener las transacciones del "Mercado"
   const fetchRecentSales = async () => {

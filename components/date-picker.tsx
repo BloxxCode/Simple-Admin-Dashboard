@@ -6,18 +6,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { DateRange } from "react-day-picker"
 
 interface DatePickerProps {
-  selected: DateRange | undefined
-  onChange: (date: DateRange | undefined) => void
+  selected: Date | undefined
+  onChange: (date: Date | undefined) => void
 }
 
 export function DatePicker({ selected, onChange }: DatePickerProps) {
 
     const [isOpen, setIsOpen] = React.useState(false);
 
-    const handleDateSelect = (date: DateRange | undefined) => {
+    const handleDateSelect = (date: Date | undefined) => {
         console.log(date)
         onChange(date)
         setIsOpen(false)

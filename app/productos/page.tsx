@@ -64,8 +64,6 @@ export default function ProductosPage() {
   // const router = useRouter()
 
   useEffect(() => {
-    // Fetch products from API
-    // This is a placeholder. Replace with actual API call.
     const fetchProducts = async () => {
       const response = await fetch("/api/products")
       const data = await response.json()
@@ -128,20 +126,26 @@ export default function ProductosPage() {
   }
 
   const handleEditProduct = () => {
-    if (!currentProduct) return
-
-    const updatedProducts = products.map(p => 
-      p._id === currentProduct._id ? { 
-        ...currentProduct, 
-        estado: currentProduct.stock === 0 ? "Sin Stock" : 
-                currentProduct.stock <= currentProduct.puntoReabastecimiento ? "Bajo Stock" : "En Stock"
-      } : p
-    )
-
-    setProducts(updatedProducts)
-    setShowEditProductDialog(false)
-    setCurrentProduct(null)
-  }
+    if (!currentProduct) return;
+  
+    const updatedProducts = products.map((p) =>
+      p._id === currentProduct._id
+        ? {
+            ...currentProduct,
+            estado:
+              currentProduct.stock === 0
+                ? "Sin Stock"
+                : currentProduct.stock <= currentProduct.puntoReabastecimiento
+                ? "Bajo Stock"
+                : "En Stock",
+          } as Product // <- Esto asegura que se reconozca como un objeto Product
+        : p
+    );
+  
+    setProducts([...updatedProducts]);
+    setShowEditProductDialog(false);
+    setCurrentProduct(null);
+  };
 
   const handleDeleteProduct = () => {
     if (!currentProduct) return

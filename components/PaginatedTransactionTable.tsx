@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/table"
 
 export type Transaction = {
-  id: string; // O el tipo que uses
+  _id: string; // O el tipo que uses
   nombre: string;
   proveedor: string;
   precio: number;
@@ -65,7 +65,7 @@ export const columns: ColumnDef<Transaction>[] = [
     accessorKey: "fechaRegistro",
     header: () => <div className="text-center">Registrado</div>,
     cell: ({ row }) => {
-      const fechaBaseDatos = row.getValue("fechaRegistro")
+      const fechaBaseDatos = row.getValue("fechaRegistro") as string
       const fechaFormateada = new Date(fechaBaseDatos)
       const horaEnLima = (fechaFormateada.toLocaleString("es-PE", { timeZone: "America/Lima" }))
       return <div className="text-center font-medium">{horaEnLima}</div>
@@ -75,7 +75,7 @@ export const columns: ColumnDef<Transaction>[] = [
     accessorKey: "proveedor",
     header: () => <div className="text-center">Proveedor</div>,
     cell: ({ row }) => {
-      const proveedor = row.getValue("proveedor")
+      const proveedor = row.getValue("proveedor") as string
       return <div className="text-center font-medium">{proveedor}</div>
     },
   },
@@ -83,7 +83,7 @@ export const columns: ColumnDef<Transaction>[] = [
     accessorKey: "cantidad",
     header: () => <div className="text-center">Cantidad</div>,
     cell: ({ row }) => {
-      const cantidad = row.getValue("cantidad")
+      const cantidad = row.getValue("cantidad") as number
       return <div className="text-center font-medium">{cantidad}</div>
     },
   },

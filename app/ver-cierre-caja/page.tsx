@@ -7,10 +7,12 @@ import { CreditCard } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/date-range-picker';
-
+import { DateRange } from "react-day-picker"
+import { PaginatedCierreTable } from "@/components/PaginatedCierreCajaTable";
+import { Cierre } from "@/types";
 
 export default function CierreDeCajaPage() {
-    const [dateRange, setDateRange] = useState({
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
       from: startOfToday(),
       to: endOfToday(),
     });
@@ -18,35 +20,33 @@ export default function CierreDeCajaPage() {
     const [totalEfectivo, setTotalEfectivo] = useState<number>(0);
     const [totalVisa, setTotalVisa] = useState<number>(0);
     const [totalYape, setTotalYape] = useState<number>(0);
+    const [cierreData, setCierreData] = useState<Cierre[]>([])
   
-    const fetchCierreCaja = async (range: { from: Date; to: Date }) => {
+    const fetchCierreCaja = async (range: DateRange | undefined) => {
       // Convertir las fechas a ISO 8601 en formato UTC
-      const startDay = format(range.from, "yyyy-MM-dd");
-      const endDay = format(range.to, "yyyy-MM-dd");
+      if (range?.from && range.to){
+        const startDay = format(range.from, "yyyy-MM-dd");
+        const endDay = format(range.to, "yyyy-MM-dd");
 
-      try {
-        const response = await fetch(`/api/ver-cierre-caja?startDay=${startDay}&endDay=${endDay}`);
-        const data = await response.json();
+        try {
+          const response = await fetch(`/api/ver-cierre-caja?startDay=${startDay}&endDay=${endDay}`);
+          const data = await response.json();
 
-        setTotalCierre(data.total);
-        setTotalEfectivo(data.totalEfectivo);
-        setTotalVisa(data.totalVisa);
-        setTotalYape(data.totalYape);
-      } catch (error) {
-        console.error('Error al obtener el cierre de caja:', error);
+          setCierreData(data.cierres)
+          console.log("Mis Cierres: ", data.cierres)
+          setTotalCierre(data.total);
+          setTotalEfectivo(data.totalEfectivo);
+          setTotalVisa(data.totalVisa);
+          setTotalYape(data.totalYape);
+        } catch (error) {
+          console.error('Error al obtener el cierre de caja:', error);
+        }
       }
     };
 
-    const handleDateRangeChange = (newDateRange: { from: Date; to: Date }) => {
-      const adjustedRange = {
-        from: newDateRange.from,
-        to: newDateRange.to,
-    };
-    // Asegurarse de que la fecha final incluya todo el día
-    adjustedRange.to.setHours(23, 59, 59, 999);
-
-    setDateRange(adjustedRange);
-    fetchCierreCaja(adjustedRange);
+    const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
+      setDateRange(newDateRange);
+      fetchCierreCaja(newDateRange);
     };
 
     useEffect(() => {
@@ -111,6 +111,7 @@ export default function CierreDeCajaPage() {
               </CardContent>
             </Card>
           </div>
+          <PaginatedCierreTable transactions={cierreData}/>
         </div>
       </div>
     );

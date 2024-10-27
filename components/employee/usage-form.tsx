@@ -139,7 +139,7 @@ export function UsageForm({ onUsageAdded }: UsageFormProps) {
                 <Input value={stockRestante.toFixed(2)} readOnly />
               </div>
               {alertaStock && (
-                <Alert variant={alertaStock.tipo === 'error' ? 'destructive' : 'warning'}>
+                <Alert variant={alertaStock.tipo === 'error' ? 'destructive' : 'default'}>
                   <AlertTitle>{alertaStock.tipo === 'error' ? 'Importante' : 'Advertencia'}</AlertTitle>
                   <AlertDescription>{alertaStock.mensaje}</AlertDescription>
                 </Alert>

@@ -17,5 +17,15 @@ export interface Producto {
     cantidad: number
     costoTotal: number
     proveedor: string
-    fechaRegistro: Date
+    fechaRegistro: string
   }
+
+  export interface Cierre {
+    _id: string; // O el tipo que uses
+    fecha: Date;
+    fechaRegistro: string;
+    efectivo: number;
+    visa: number;
+    yape: number;
+    total: number;
+  };

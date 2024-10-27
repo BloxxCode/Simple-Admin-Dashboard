@@ -4,8 +4,6 @@ import * as React from "react";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { addDays, format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { fromZonedTime } from 'date-fns-tz'; // Importar funciones adecuadas
-const limaTimeZone = 'America/Lima';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,72 +22,69 @@ import {
 } from "@/components/ui/select";
 
 export type DateRangePickerProps = React.HTMLAttributes<HTMLDivElement> & {
-  onDateRangeChange?: (dateRange: DateRange | undefined) => void;
-  onPeriodChange?: (period: string) => void;
+  onDateRangeChange?: (dateRange: DateRange) => void;
 };
 
 export function DateRangePicker({
   className,
   onDateRangeChange,
 }: DateRangePickerProps) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
+  const [date, setDate] = React.useState<DateRange>({
     from: new Date(),
-    to: addDays(new Date(), 7),
+    to: addDays(new Date(), 3),
   });
   const [selectedPeriod, setSelectedPeriod] = React.useState("today");
 
-  const handleDateRangeChange = (newDate: DateRange | undefined) => {
-    setDate(newDate);
-    if (onDateRangeChange) {
-      onDateRangeChange(newDate);
+  const handleDateRangeChange = (newDate?: DateRange) => {
+    if (newDate) { // Verifica si newDate no es undefined
+        setDate(newDate);
+        if (onDateRangeChange) {
+            onDateRangeChange(newDate); // Llama a la función con el rango de fechas
+        }
+    } else {
+        console.log("Rango de fechas no seleccionado");
     }
-  };
+};
 
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
   
-    let newDateRange: DateRange | undefined;
-  
-    if (value === "today") {
-      newDateRange = {
-        from: startOfToday(),
-        to: endOfToday(),
-      };
-    } else if (value === "this-week") {
-      newDateRange = {
-        from: startOfWeek(new Date(), { weekStartsOn: 1 }), // Lunes
-        to: endOfWeek(new Date(), { weekStartsOn: 1 }), // Domingo
-      };
-    } else if (value === "this-month") {
-      newDateRange = {
-        from: startOfMonth(new Date()),
-        to: endOfMonth(new Date()),
-      };
+    let newDateRange: DateRange
+
+    switch (value) {
+        case "today":
+            newDateRange = {
+                from: startOfToday(),
+                to: endOfToday(),
+            };
+            console.log("Fecha de hoy entre: ", newDateRange);
+            
+            break;
+        case "this-week":
+            newDateRange = {
+                from: startOfWeek(new Date(), { weekStartsOn: 1 }),
+                to: endOfWeek(new Date(), { weekStartsOn: 1 }),
+            };
+            break;
+        case "this-month":
+            newDateRange = {
+                from: startOfMonth(new Date()),
+                to: endOfMonth(new Date()),
+            };
+            break;
+        case "custom":
+            return; // No hacemos nada si es personalizado
+        default:
+            return; // Podrías manejar esto como un caso de error si lo prefieres
     }
-  
-    // Aquí verificamos si newDateRange está definido antes de usarlo
-    if (newDateRange) {
-      // Ajustar la fecha final al último segundo del día
-      newDateRange.to.setHours(23, 59, 59, 999);
-  
-      // Convertir a UTC
-      const utcFrom = fromZonedTime(newDateRange.from, limaTimeZone).toISOString();
-      const utcTo = fromZonedTime(newDateRange.to, limaTimeZone).toISOString();
-  
-      console.log(utcFrom, utcTo);
-  
-      // Llamar a la función onDateRangeChange con el nuevo rango en UTC
-      if (onDateRangeChange) {
-        onDateRangeChange({
-          from: new Date(utcFrom),
-          to: new Date(utcTo),
-        });
-      }
-  
-      // Actualizar el estado del rango de fechas
-      setDate(newDateRange);
+
+    // // Llamar a la función onDateRangeChange con el nuevo rango en UTC
+    if (onDateRangeChange) {
+      onDateRangeChange(newDateRange);
     }
-  };
+    // Actualizar el estado del rango de fechas
+    setDate(newDateRange);
+};
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

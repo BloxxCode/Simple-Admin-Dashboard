@@ -41,7 +41,7 @@ export function TransactionForm({ onTransactionAdded }: TransactionFormProps) {
   }
 
   const obtenerFechaLima = () => {
-    const fecha = DateTime.now().setZone('America/Lima').toISO();
+    const fecha = DateTime.now().setZone('America/Lima').toISO() as string;
     const dateFecha = new Date(fecha).toISOString()
     return dateFecha
   };
@@ -110,6 +110,7 @@ export function TransactionForm({ onTransactionAdded }: TransactionFormProps) {
     };
   
     const transaccion: Partial<Transaccion> = {
+      _id: productoSeleccionado._id,
       nombre: productoSeleccionado.nombre,
       categoria: productoSeleccionado.categoria,
       medida: productoSeleccionado.medida,
