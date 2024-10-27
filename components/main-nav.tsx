@@ -23,6 +23,12 @@ export function MainNav({
       >
         Productos
       </Link>
+      <Link
+        href="/ver-cierre-caja"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        Cierres de Caja
+      </Link>
     </nav>
   )
 }

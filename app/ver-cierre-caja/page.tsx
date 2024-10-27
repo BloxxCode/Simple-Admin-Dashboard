@@ -11,6 +11,11 @@ import { DateRange } from "react-day-picker"
 import { PaginatedCierreTable } from "@/components/PaginatedCierreCajaTable";
 import { Cierre } from "@/types";
 
+import Image from "next/image"
+import { MainNav } from "@/components/main-nav";
+import { UserNav } from "@/components/user-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export default function CierreDeCajaPage() {
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
       from: startOfToday(),
@@ -56,11 +61,19 @@ export default function CierreDeCajaPage() {
 
     return (
       <div className="flex flex-col min-h-screen">
-        <header className="border-b">
-          <div className="flex h-16 items-center px-4">
-            <h1 className="font-bold text-2xl">Cierre de Caja</h1>
+      <header className="border-b">
+        <div className="flex h-16 items-center px-4">
+          <div className="flex items-center space-x-2">
+            <Image src="/logo.svg" alt="Logo" width={32} height={32} />
+            <span className="font-bold">Sam Admin System</span>
           </div>
-        </header>
+          <MainNav className="mx-6" />
+          <div className="ml-auto flex items-center space-x-4">
+            <ThemeToggle />
+            <UserNav />
+          </div>
+        </div>
+      </header>
         <div className="flex-1 space-y-4 p-8 pt-6">
           <div className="flex items-center justify-between space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">Totales Cierre de Caja</h2>

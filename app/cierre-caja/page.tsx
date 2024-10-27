@@ -9,6 +9,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { formatInTimeZone } from 'date-fns-tz';
 import { DateTime } from "luxon";
 
+import { MainNav } from "@/components/employee/main-nav"
+import { ThemeToggle } from "@/components/theme-toggle"
+import Image from "next/image"
+
 export default function CierreDeCaja() {
   const limaTimeZone = 'America/Lima';
 
@@ -113,79 +117,95 @@ export default function CierreDeCaja() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Cierre de Caja</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex flex-col">
-            <Label className="mb-4">Fecha y Hora del Cierre de Caja</Label>
-            <p>{fechaRegistro}</p> {/* Mostrar la fecha y hora completa con segundos */}
+    <div className="flex flex-col min-h-screen">
+      <header className="border-b">
+        <div className="flex h-16 items-center px-4">
+          <div className="flex items-center space-x-2">
+            <Image src="/logo.svg" alt="Logo" width={32} height={32} />
+            <span className="font-bold">Sam Admin System</span>
           </div>
-          <div className="mb-4">
-            <Label htmlFor="efectivo">Efectivo (S/)</Label>
-            <Input
-              id="efectivo"
-              type="number"
-              value={efectivo}
-              onChange={(e) => {
-                setEfectivo(e.target.value);
-                setErrors({ ...errors, efectivo: undefined });
-              }}
-              placeholder="0.00"
-              className={errors.efectivo ? 'border-red-500' : ''}
-            />
-            {errors.efectivo && <p className="text-red-500">{errors.efectivo}</p>}
+          <MainNav className="mx-6" />
+          <div className="ml-auto flex items-center space-x-4">
+            <ThemeToggle />
           </div>
-          <div className="mb-4">
-            <Label htmlFor="visa">Visa (S/)</Label>
-            <Input
-              id="visa"
-              type="number"
-              value={visa}
-              onChange={(e) => {
-                setVisa(e.target.value);
-                setErrors({ ...errors, visa: undefined });
-              }}
-              placeholder="0.00"
-              className={errors.visa ? 'border-red-500' : ''}
-            />
-            {errors.visa && <p className="text-red-500">{errors.visa}</p>}
-          </div>
-          <div className="mb-4">
-            <Label htmlFor="yape">Yape (S/)</Label>
-            <Input
-              id="yape"
-              type="number"
-              value={yape}
-              onChange={(e) => {
-                setYape(e.target.value);
-                setErrors({ ...errors, yape: undefined });
-              }}
-              placeholder="0.00"
-              className={errors.yape ? 'border-red-500' : ''}
-            />
-            {errors.yape && <p className="text-red-500">{errors.yape}</p>}
-          </div>
-          <Button className="w-full" onClick={handleClickGuardar}>Guardar Registro</Button>
-          <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-            <AlertDialogTrigger asChild></AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar Cierre de Caja</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {getResumen()}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleGuardar}>Guardar</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
-      </CardContent>
-    </Card>
+      </header>
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cierre de Caja</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex flex-col">
+                <Label className="mb-4">Fecha y Hora del Cierre de Caja</Label>
+                <p>{fechaRegistro}</p> {/* Mostrar la fecha y hora completa con segundos */}
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="efectivo">Efectivo (S/)</Label>
+                <Input
+                  id="efectivo"
+                  type="number"
+                  value={efectivo}
+                  onChange={(e) => {
+                    setEfectivo(e.target.value);
+                    setErrors({ ...errors, efectivo: undefined });
+                  }}
+                  placeholder="0.00"
+                  className={errors.efectivo ? 'border-red-500' : ''}
+                />
+                {errors.efectivo && <p className="text-red-500">{errors.efectivo}</p>}
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="visa">Visa (S/)</Label>
+                <Input
+                  id="visa"
+                  type="number"
+                  value={visa}
+                  onChange={(e) => {
+                    setVisa(e.target.value);
+                    setErrors({ ...errors, visa: undefined });
+                  }}
+                  placeholder="0.00"
+                  className={errors.visa ? 'border-red-500' : ''}
+                />
+                {errors.visa && <p className="text-red-500">{errors.visa}</p>}
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="yape">Yape (S/)</Label>
+                <Input
+                  id="yape"
+                  type="number"
+                  value={yape}
+                  onChange={(e) => {
+                    setYape(e.target.value);
+                    setErrors({ ...errors, yape: undefined });
+                  }}
+                  placeholder="0.00"
+                  className={errors.yape ? 'border-red-500' : ''}
+                />
+                {errors.yape && <p className="text-red-500">{errors.yape}</p>}
+              </div>
+              <Button className="w-full" onClick={handleClickGuardar}>Guardar Registro</Button>
+              <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+                <AlertDialogTrigger asChild></AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar Cierre de Caja</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {getResumen()}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleGuardar}>Guardar</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
