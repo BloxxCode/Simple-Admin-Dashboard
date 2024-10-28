@@ -1,34 +1,20 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-// import { useRouter } from "next/navigation"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import Image from "next/image"
-
 import { Plus, FileDown, MoreHorizontal, Pencil, Trash2, ChevronDown } from "lucide-react"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MainNav } from "@/components/main-nav"
 import { UserNav } from "@/components/user-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
 
 interface Product {
   _id: string
@@ -40,128 +26,288 @@ interface Product {
   puntoReabastecimiento: number
 }
 
+type ProductDialogProps = {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (product: Omit<Product, '_id' | 'estado'>) => Promise<void>
+  initialProduct: Omit<Product, '_id' | 'estado'>
+  isNewProduct: boolean
+  existingProducts: Product[]
+}
+
+const ITEMS_PER_PAGE = 10
+
+const ProductDialog: React.FC<ProductDialogProps> = React.memo(({ isOpen, onClose, onSave, initialProduct, isNewProduct, existingProducts }) => {
+  const { toast } = useToast()
+  const [product, setProduct] = useState<Omit<Product, '_id' | 'estado'>>(initialProduct)
+  const [productExists, setProductExists] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    setProduct(initialProduct)
+    setProductExists(false)
+  }, [initialProduct])
+
+  const handleChange = (field: keyof Omit<Product, '_id' | 'estado'>, value: string | number) => {
+    setProduct(prev => ({ ...prev, [field]: value }))
+    if (field === 'nombre') {
+      setProductExists(existingProducts.some(p => p.nombre.toLowerCase() === value.toString().toLowerCase()))
+    }
+  }
+
+  const handleSave = async () => {
+    if (!productExists) {
+      setIsSaving(true)
+      try {
+        await onSave(product)
+        onClose()
+      } catch (error) {
+        console.error('Error al guardar el producto:', error)
+        toast({
+          title: "Error",
+          description: "No se pudo guardar el producto. Por favor, inténtelo de nuevo.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsSaving(false)
+      }
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]" aria-describedby="product-dialog-description">
+        <DialogHeader>
+          <DialogTitle>{isNewProduct ? "Agregar Nuevo Producto" : "Editar Producto"}</DialogTitle>
+          <DialogDescription id="product-dialog-description">
+            {isNewProduct ? "Ingrese los detalles del nuevo producto." : "Modifique los detalles del producto."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="nombre" className={`text-right ${productExists ? "text-red-500" : ""}`}>
+              Nombre
+            </Label>
+            <div className="col-span-3 space-y-1">
+              <Input
+                id="nombre"
+                value={product.nombre}
+                onChange={(e) => handleChange('nombre', e.target.value)}
+                className={`${productExists ? "border-red-500" : ""}`}
+              />
+              {productExists && (
+                <p className="text-red-500 text-sm">El producto ya existe. Por favor, use un nombre diferente.</p>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="categoria" className="text-right">
+              Categoría
+            </Label>
+            <Input
+              id="categoria"
+              value={product.categoria}
+              onChange={(e) => handleChange('categoria', e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="medida" className="text-right">
+              Medida
+            </Label>
+            <Select
+              value={product.medida}
+              onValueChange={(value) => handleChange('medida', value as "Kilogramos" | "Litros" | "Unidades")}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Seleccionar medida" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Kilogramos", "Litros", "Unidades"].map((measure) => (
+                  <SelectItem key={measure} value={measure}>{measure}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="stock" className="text-right">
+              Stock
+            </Label>
+            <Input
+              id="stock"
+              type="number"
+              value={product.stock}
+              onChange={(e) => handleChange('stock', Number(e.target.value))}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="puntoReabastecimiento" className="text-right">
+              Punto de Reabastecimiento
+            </Label>
+            <Input
+              id="puntoReabastecimiento"
+              type="number"
+              value={product.puntoReabastecimiento}
+              onChange={(e) => handleChange('puntoReabastecimiento', Number(e.target.value))}
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={!product.nombre || !product.categoria || !product.medida || productExists || isSaving}>
+            {isSaving ? "Guardando..." : (isNewProduct ? "Guardar" : "Guardar Cambios")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+})
+
+ProductDialog.displayName = 'ProductDialog'
+
 export default function ProductosPage() {
+  const { toast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [filterStatus, setFilterStatus] = useState("Todo")
-  const [sortBy, setSortBy] = useState("nombre")
+  const [filterStatus, setFilterStatus] = useState<"Todo" | "En Stock" | "Bajo Stock" | "Sin Stock">("Todo")
+  const [sortBy, setSortBy] = useState<keyof Product>("nombre")
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showAddProductDialog, setShowAddProductDialog] = useState(false)
   const [showEditProductDialog, setShowEditProductDialog] = useState(false)
   const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false)
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
-  const [newProduct, setNewProduct] = useState<Omit<Product, '_id' | 'estado'>>({
-    nombre: "",
-    categoria: "",
-    medida: "Kilogramos",
-    stock: 0,
-    puntoReabastecimiento: 10,
-  })
-  const [productExists, setProductExists] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
 
-  // const router = useRouter()
-
-  useEffect(() => {
-    const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      console.log('Iniciando fetch de productos...')
       const response = await fetch("/api/products")
-      const data = await response.json()
+      console.log('Respuesta recibida:', response.status)
+      //const response = await fetch("/api/products")
+      if (!response.ok) throw new Error("Error al cargar productos. Intenta nuevamente.")
+      const data: Product[] = await response.json()
       setProducts(data)
-      setFilteredProducts(data)
+    } catch (error) {
+      setError((error as Error).message)
+    } finally {
+      setIsLoading(false)
     }
-    fetchProducts()
   }, [])
 
   useEffect(() => {
-    let result = products
+    fetchProducts()
+  }, [fetchProducts])
 
-    // Apply status filter
-    if (filterStatus !== "Todo") {
-      result = result.filter(product => product.estado === filterStatus)
-    }
-
-    // Apply search filter
-    if (searchQuery) {
-      result = result.filter(product => 
-        product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.categoria.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      if (a[sortBy as keyof Product] < b[sortBy as keyof Product]) return -1
-      if (a[sortBy as keyof Product] > b[sortBy as keyof Product]) return 1
-      return 0
-    })
-
-    setFilteredProducts(result)
-    setCurrentPage(1)
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => 
+      (filterStatus === "Todo" || product.estado === filterStatus) &&
+      (product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       product.categoria.toLowerCase().includes(searchQuery.toLowerCase()))
+    ).sort((a, b) => (a[sortBy] < b[sortBy] ? -1 : 1))
   }, [products, filterStatus, searchQuery, sortBy])
 
-  const handleAddProduct = () => {
-    if (products.some(p => p.nombre === newProduct.nombre)) {
-      setProductExists(true)
-      return
-    }
+  const handleAddProduct = async (newProduct: Omit<Product, '_id' | 'estado'>) => {
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newProduct),
+      })
 
-    const product: Product = {
-      _id: Date.now().toString(), // This is a temporary ID. The actual ID will be assigned by MongoDB.
-      ...newProduct,
-      estado: newProduct.stock === 0 ? "Sin Stock" : 
-              newProduct.stock <= newProduct.puntoReabastecimiento ? "Bajo Stock" : "En Stock",
-    }
+      if (!response.ok) {
+        throw new Error('Error al agregar el producto')
+      }
 
-    setProducts([...products, product])
-    setShowAddProductDialog(false)
-    setNewProduct({
-      nombre: "",
-      categoria: "",
-      medida: "Kilogramos",
-      stock: 0,
-      puntoReabastecimiento: 10,
-    })
-    setProductExists(false)
+      const addedProduct: Product = await response.json()
+      setProducts(prevProducts => [...prevProducts, addedProduct])
+      setShowAddProductDialog(false)
+      toast({
+        title: "Éxito",
+        description: "Producto agregado correctamente",
+      })
+    } catch (error) {
+      console.error('Error al agregar el producto:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el producto. Por favor, inténtelo de nuevo.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleEditProduct = () => {
-    if (!currentProduct) return;
-  
-    const updatedProducts = products.map((p) =>
-      p._id === currentProduct._id
-        ? {
-            ...currentProduct,
-            estado:
-              currentProduct.stock === 0
-                ? "Sin Stock"
-                : currentProduct.stock <= currentProduct.puntoReabastecimiento
-                ? "Bajo Stock"
-                : "En Stock",
-          } as Product // <- Esto asegura que se reconozca como un objeto Product
-        : p
-    );
-  
-    setProducts([...updatedProducts]);
-    setShowEditProductDialog(false);
-    setCurrentProduct(null);
-  };
-
-  const handleDeleteProduct = () => {
+  const handleEditProduct = async (updatedProduct: Omit<Product, '_id' | 'estado'>) => {
     if (!currentProduct) return
 
-    const updatedProducts = products.filter(p => p._id !== currentProduct._id)
-    setProducts(updatedProducts)
-    setShowDeleteProductDialog(false)
-    setCurrentProduct(null)
+    try {
+      const response = await fetch(`/api/products/${currentProduct._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProduct),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el producto')
+      }
+
+      const editedProduct: Product = await response.json()
+      setProducts(prevProducts => prevProducts.map(p => p._id === editedProduct._id ? editedProduct : p))
+      setShowEditProductDialog(false)
+      setCurrentProduct(null)
+      toast({
+        title: "Éxito",
+        description: "Producto actualizado correctamente",
+      })
+    } catch (error) {
+      console.error('Error al actualizar el producto:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el producto. Por favor, inténtelo de nuevo.",
+        variant: "destructive",
+      })
+    }
   }
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem)
+  const handleDeleteProduct = async () => {
+    if (!currentProduct) return
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+    try {
+      const response = await fetch(`/api/products/${currentProduct._id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar el producto')
+      }
+
+      setProducts(prevProducts => prevProducts.filter(p => p._id !== currentProduct._id))
+      setShowDeleteProductDialog(false)
+      setCurrentProduct(null)
+      toast({
+        title: "Éxito",
+        description: "Producto eliminado correctamente",
+      })
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el producto. Por favor, inténtelo de nuevo.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem)
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -188,98 +334,18 @@ export default function ProductosPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-[300px]"
             />
-            <Dialog open={showAddProductDialog} onOpenChange={setShowAddProductDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Producto
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Agregar Nuevo Producto</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="nombre" className="text-right">
-                      Nombre
-                    </Label>
-                    <Input
-                      id="nombre"
-                      value={newProduct.nombre}
-                      onChange={(e) => setNewProduct({...newProduct, nombre: e.target.value})}
-                      className={`col-span-3 ${productExists ? 'border-red-500' : ''}`}
-                    />
-                    {productExists && <p className="col-span-3 col-start-2 text-red-500 text-sm">Producto ya existe</p>}
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="categoria" className="text-right">
-                      Categoría
-                    </Label>
-                    <Input
-                      id="categoria"
-                      value={newProduct.categoria}
-                      onChange={(e) => setNewProduct({...newProduct, categoria: e.target.value})}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="medida" className="text-right">
-                      Tipo de Medida
-                    </Label>
-                    <Select
-                      value={newProduct.medida}
-                      onValueChange={(value) => setNewProduct({...newProduct, medida: value as "Kilogramos" | "Litros" | "Unidades"})}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Seleccionar medida" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Kilogramos">Kilogramos</SelectItem>
-                        <SelectItem value="Litros">Litros</SelectItem>
-                        <SelectItem value="Unidades">Unidades</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="stock" className="text-right">
-                      Stock
-                    </Label>
-                    <Input
-                      id="stock"
-                      type="number"
-                      value={newProduct.stock}
-                      onChange={(e) => setNewProduct({...newProduct, stock: Number(e.target.value)})}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="puntoReabastecimiento" className="text-right">
-                      Punto de Reabastecimiento
-                    </Label>
-                    <Input
-                      id="puntoReabastecimiento"
-                      type="number"
-                      value={newProduct.puntoReabastecimiento}
-                      onChange={(e) => setNewProduct({...newProduct, puntoReabastecimiento: Number(e.target.value)})}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowAddProductDialog(false)}>Cancelar</Button>
-                  <Button onClick={handleAddProduct} disabled={!newProduct.nombre || !newProduct.categoria || !newProduct.medida}>Guardar</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setShowAddProductDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Agregar Producto
+            </Button>
           </div>
         </div>
-        <Tabs defaultValue="Todo" onValueChange={(value) => setFilterStatus(value)}>
+        <Tabs defaultValue="Todo" onValueChange={(value) => setFilterStatus(value as "Todo" | "En Stock" | "Bajo Stock" | "Sin Stock")}>
           <TabsList>
-            <TabsTrigger value="Todo">Todo</TabsTrigger>
-            <TabsTrigger value="En Stock">En Stock</TabsTrigger>
-            <TabsTrigger value="Bajo Stock">Bajo Stock</TabsTrigger>
-            <TabsTrigger value="Sin Stock">Sin Stock</TabsTrigger>
+            {["Todo", "En Stock", "Bajo Stock", "Sin Stock"].map((status) => (
+              <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
+            ))}
+          
           </TabsList>
         </Tabs>
         <div className="flex justify-between items-center">
@@ -291,9 +357,11 @@ export default function ProductosPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortBy("nombre")}>Nombre</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("categoria")}>Categoría</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("stock")}>Stock</DropdownMenuItem>
+              {["nombre", "categoria", "stock"].map((field) => (
+                <DropdownMenuItem key={field} onClick={() => setSortBy(field as keyof Product)}>
+                  {field.charAt(0).toUpperCase() + field.slice(1)}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="outline">
@@ -305,61 +373,58 @@ export default function ProductosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Medida</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Punto de Reabastecimiento</TableHead>
-                <TableHead>Acciones</TableHead>
+                {["Nombre", "Categoría", "Medida", "Stock", "Estado", "Punto de Reabastecimiento", "Acciones"].map((header) => (
+                  <TableHead key={header}>{header}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {currentItems.map((product) => (
-                <TableRow key={product._id}>
-                  <TableCell>{product.nombre}</TableCell>
-                  <TableCell>{product.categoria}</TableCell>
-                  <TableCell>{product.medida}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>{product.estado}</TableCell>
-                  <TableCell>{product.puntoReabastecimiento}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menú</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => {
-                          setCurrentProduct(product)
-                          setShowEditProductDialog(true)
-                        }}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setCurrentProduct(product)
-                          setShowDeleteProductDialog(true)
-                        }}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+            {!isLoading && !error && filteredProducts.length > 0 && (
+              <TableBody>
+                {currentItems.map((product) => (
+                  <TableRow key={product._id}>
+                    {(["nombre", "categoria", "medida", "stock", "estado", "puntoReabastecimiento"] as const).map((field) => (
+                      <TableCell key={field}>{product[field]}</TableCell>
+                    ))}
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => {
+                            setCurrentProduct(product)
+                            setShowEditProductDialog(true)
+                          }}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setCurrentProduct(product)
+                            setShowDeleteProductDialog(true)
+                          }}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
           </Table>
+          {isLoading && <div>Cargando productos...</div>}
+          {error && <p className="text-red-500">{error}</p>}
         </div>
-        <div  className="flex justify-center mt-4">
-          {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => (
+        <div className="flex justify-center mt-4">
+          {Array.from({ length: Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) }, (_, i) => (
             <Button
               key={i}
-              onClick={() => paginate(i + 1)}
+              onClick={() => setCurrentPage(i + 1)}
               variant={currentPage === i + 1 ? "default" : "outline"}
               className="mx-1"
             >
@@ -368,95 +433,53 @@ export default function ProductosPage() {
           ))}
         </div>
       </div>
+      
+      <ProductDialog
+        isOpen={showAddProductDialog}
+        onClose={() => setShowAddProductDialog(false)}
+        onSave={handleAddProduct}
+        initialProduct={{
+          nombre: "",
+          categoria: "",
+          medida: "Kilogramos",
+          stock: 0,
+          puntoReabastecimiento: 10,
+        }}
+        isNewProduct={true}
+        existingProducts={products}
+      />
 
-      {/* Edit Product Dialog */}
-      <Dialog open={showEditProductDialog} onOpenChange={setShowEditProductDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Producto</DialogTitle>
-          </DialogHeader>
-          {currentProduct && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-nombre" className="text-right">
-                  Nombre
-                </Label>
-                <Input
-                  id="edit-nombre"
-                  value={currentProduct.nombre}
-                  onChange={(e) => setCurrentProduct({...currentProduct, nombre: e.target.value})}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-categoria" className="text-right">
-                  Categoría
-                </Label>
-                <Input
-                  id="edit-categoria"
-                  value={currentProduct.categoria}
-                  onChange={(e) => setCurrentProduct({...currentProduct, categoria: e.target.value})}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-medida" className="text-right">
-                  Tipo de Medida
-                </Label>
-                <Select
-                  value={currentProduct.medida}
-                  onValueChange={(value) => setCurrentProduct({...currentProduct, medida: value as "Kilogramos" | "Litros" | "Unidades"})}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Seleccionar medida" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Kilogramos">Kilogramos</SelectItem>
-                    <SelectItem value="Litros">Litros</SelectItem>
-                    <SelectItem value="Unidades">Unidades</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-stock" className="text-right">
-                  Stock
-                </Label>
-                <Input
-                  id="edit-stock"
-                  type="number"
-                  value={currentProduct.stock}
-                  onChange={(e) => setCurrentProduct({...currentProduct, stock: Number(e.target.value)})}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-puntoReabastecimiento" className="text-right">
-                  Punto de Reabastecimiento
-                </Label>
-                <Input
-                  id="edit-puntoReabastecimiento"
-                  type="number"
-                  value={currentProduct.puntoReabastecimiento}
-                  onChange={(e) => setCurrentProduct({...currentProduct, puntoReabastecimiento: Number(e.target.value)})}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditProductDialog(false)}>Cancelar</Button>
-            <Button onClick={handleEditProduct}>Guardar Cambios</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProductDialog
+        isOpen={showEditProductDialog}
+        onClose={() => setShowEditProductDialog(false)}
+        onSave={handleEditProduct}
+        initialProduct={currentProduct ? {
+          nombre: currentProduct.nombre,
+          categoria: currentProduct.categoria,
+          medida: currentProduct.medida,
+          stock: currentProduct.stock,
+          puntoReabastecimiento: currentProduct.puntoReabastecimiento,
+        } : {
+          nombre: "",
+          categoria: "",
+          medida: "Kilogramos",
+          stock: 0,
+          puntoReabastecimiento: 10,
+        }}
+        isNewProduct={false}
+        existingProducts={products.filter(p => p._id !== currentProduct?._id)}
+      />
 
-      {/* Delete Product Dialog */}
       <Dialog open={showDeleteProductDialog} onOpenChange={setShowDeleteProductDialog}>
-        <DialogContent>
+        <DialogContent aria-describedby="delete-dialog-description">
           <DialogHeader>
             <DialogTitle>Eliminar Producto</DialogTitle>
+          
+            <DialogDescription id="delete-dialog-description">
+              Esta acción no se puede deshacer. ¿Estás seguro de que quieres eliminar este producto?
+            </DialogDescription>
           </DialogHeader>
-          <p>¿Estás seguro de que quieres eliminar el producto &quot;{currentProduct?.nombre}&quot;? Esta acción no se puede deshacer.</p>
+          <p>¿Estás seguro de que quieres eliminar el producto &quot;{currentProduct?.nombre}&quot;?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteProductDialog(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDeleteProduct}>Eliminar</Button>
