@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import Image from "next/image"
-import { Plus, FileDown, MoreHorizontal, Pencil, Trash2, ChevronDown } from "lucide-react"
+import { Plus, FileDown, MoreHorizontal, Pencil, Trash2, ChevronDown, CheckCircle2, AlertCircle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +43,23 @@ const ProductDialog: React.FC<ProductDialogProps> = React.memo(({ isOpen, onClos
   const [productExists, setProductExists] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
+  const showToast = (message: string, isSuccess: boolean) => {
+    toast({
+      description: (
+        <div className="flex items-center gap-2">
+          {isSuccess ? (
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )}
+          <span>{message}</span>
+        </div>
+      ),
+      variant: isSuccess ? "default" : "destructive",
+      duration: isSuccess? 3000 : 6000,
+    })
+  }
+
   useEffect(() => {
     setProduct(initialProduct)
     setProductExists(false)
@@ -63,11 +80,8 @@ const ProductDialog: React.FC<ProductDialogProps> = React.memo(({ isOpen, onClos
         onClose()
       } catch (error) {
         console.error('Error al guardar el producto:', error)
-        toast({
-          title: "Error",
-          description: "No se pudo guardar el producto. Por favor, inténtelo de nuevo.",
-          variant: "destructive",
-        })
+        // Para error
+        showToast("No se pudo agregar el producto. Por favor, inténtelo de nuevo.", false)
       } finally {
         setIsSaving(false)
       }
@@ -181,9 +195,27 @@ export default function ProductosPage() {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const showToast = useCallback((message: string, isSuccess: boolean) => {
+    toast({
+      description: (
+        <div className="flex items-center gap-2">
+          {isSuccess ? (
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )}
+          <span>{message}</span>
+        </div>
+      ),
+      variant: isSuccess ? "default" : "destructive",
+      duration: isSuccess ? 3000 : 6000,
+    })
+  }, [toast])
+
   const fetchProducts = useCallback(async () => {
     setIsLoading(true)
     setError(null)
+
     try {
       console.log('Iniciando fetch de productos...')
       const response = await fetch("/api/products")
@@ -194,10 +226,11 @@ export default function ProductosPage() {
       setProducts(data)
     } catch (error) {
       setError((error as Error).message)
+      showToast("No se pudo obtener los productos de la Base de Datos", false)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showToast])
 
   useEffect(() => {
     fetchProducts()
@@ -211,14 +244,24 @@ export default function ProductosPage() {
     ).sort((a, b) => (a[sortBy] < b[sortBy] ? -1 : 1))
   }, [products, filterStatus, searchQuery, sortBy])
 
+  const calculateProductState = (stock: number, puntoReabastecimiento: number): Product['estado'] => {
+    if (stock === 0) return "Sin Stock"
+    if (stock <= puntoReabastecimiento) return "Bajo Stock"
+    return "En Stock"
+  }
+
   const handleAddProduct = async (newProduct: Omit<Product, '_id' | 'estado'>) => {
     try {
+      const productWithState = {
+        ...newProduct,
+        estado: calculateProductState(newProduct.stock, newProduct.puntoReabastecimiento)
+      }
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newProduct),
+        body: JSON.stringify(productWithState),
       })
 
       if (!response.ok) {
@@ -228,17 +271,10 @@ export default function ProductosPage() {
       const addedProduct: Product = await response.json()
       setProducts(prevProducts => [...prevProducts, addedProduct])
       setShowAddProductDialog(false)
-      toast({
-        title: "Éxito",
-        description: "Producto agregado correctamente",
-      })
+      showToast("Producto agregado correctamente", true)
     } catch (error) {
       console.error('Error al agregar el producto:', error)
-      toast({
-        title: "Error",
-        description: "No se pudo agregar el producto. Por favor, inténtelo de nuevo.",
-        variant: "destructive",
-      })
+      showToast("No se pudo agregar el producto. Por favor, inténtelo de nuevo", false)
     }
   }
 
@@ -246,12 +282,17 @@ export default function ProductosPage() {
     if (!currentProduct) return
 
     try {
+      const productWithState = {
+        ...updatedProduct,
+        estado: calculateProductState(updatedProduct.stock, updatedProduct.puntoReabastecimiento)
+      }
+
       const response = await fetch(`/api/products/${currentProduct._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedProduct),
+        body: JSON.stringify(productWithState),
       })
 
       if (!response.ok) {
@@ -262,17 +303,10 @@ export default function ProductosPage() {
       setProducts(prevProducts => prevProducts.map(p => p._id === editedProduct._id ? editedProduct : p))
       setShowEditProductDialog(false)
       setCurrentProduct(null)
-      toast({
-        title: "Éxito",
-        description: "Producto actualizado correctamente",
-      })
+      showToast("Producto actualizado correctamente", true)
     } catch (error) {
       console.error('Error al actualizar el producto:', error)
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el producto. Por favor, inténtelo de nuevo.",
-        variant: "destructive",
-      })
+      showToast("No se pudo actualizar el producto. Por favor, inténtelo de nuevo.", false)
     }
   }
 
@@ -291,18 +325,36 @@ export default function ProductosPage() {
       setProducts(prevProducts => prevProducts.filter(p => p._id !== currentProduct._id))
       setShowDeleteProductDialog(false)
       setCurrentProduct(null)
-      toast({
-        title: "Éxito",
-        description: "Producto eliminado correctamente",
-      })
+      showToast("Producto eliminado correctamente", true)
     } catch (error) {
       console.error('Error al eliminar el producto:', error)
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el producto. Por favor, inténtelo de nuevo.",
-        variant: "destructive",
-      })
+      showToast("No se pudo eliminar el producto. Por favor, inténtelo de nuevo.", false)
     }
+  }
+
+  const getStateStyles = (estado: Product['estado']) => {
+    switch (estado) {
+      case "En Stock":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      case "Bajo Stock":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+      case "Sin Stock":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      default:
+        return ""
+    }
+  }
+
+  // Función para renderizar el contenido de la celda según el campo
+  const renderCellContent = (field: keyof Product, value: Product[keyof Product]) => {
+    if (field === 'estado' && typeof value === 'string' && (value === "En Stock" || value === "Bajo Stock" || value === "Sin Stock")) {
+      return (
+        <span className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${getStateStyles(value)}`}>
+          {value}
+        </span>
+      )
+    }
+    return value
   }
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE
@@ -383,7 +435,7 @@ export default function ProductosPage() {
                 {currentItems.map((product) => (
                   <TableRow key={product._id}>
                     {(["nombre", "categoria", "medida", "stock", "estado", "puntoReabastecimiento"] as const).map((field) => (
-                      <TableCell key={field}>{product[field]}</TableCell>
+                      <TableCell key={field}>{renderCellContent(field, product[field])}</TableCell>
                     ))}
                     <TableCell>
                       <DropdownMenu>

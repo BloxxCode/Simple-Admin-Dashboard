@@ -1,6 +1,7 @@
 "use client"
 
 // import type { Metadata } from "next"
+import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
 import "./globals.css"
@@ -40,6 +41,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   )
